@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+<body>
+	<h1>Log In</h1>
+
+		<form id="login-form">
+			<div>
+				<label for="username">Username</label>
+				<input type="text" id="username" name="username" required>
+
+				<label for="password">Password</label>
+				<input type="password" id="password" name="password" required>
+			</div>
+
+			<button type="submit" id="submit-btn">Sign In</button>
+		</form>
+
+		<p>Don't have an account? <a href="/register">Register here</a></p>
+
+	<script>
+		const form = document.getElementById("login-form") as HTMLFormElement
+
+		form?.addEventListener("submit", async function(e) {
+			e.preventDefault()
+
+		const formData = new FormData(form)
+		const username = formData.get("username")
+		const password = formData.get("password")
+
+		const res = await fetch("http://localhost:3000/users/login", {
+			method: "POST",
+			headers: {"Content-type": "application/json"},
+			credentials: "include",
+			body: JSON.stringify({username, password})
+		})
+
+		const data = await res.json()
+		
+		if(!res.ok){
+			alert(data.error)
+			return
+		}
+
+		window.location.href = "/profile"
+	})
+			
+	</script>
+</body>
+</html>

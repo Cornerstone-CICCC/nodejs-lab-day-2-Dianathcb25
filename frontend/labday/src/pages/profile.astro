@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+<style>
+    #profile-content {
+        display: none;
+    }
+
+    #edit-form {
+        display: none;
+    margin-top: 1rem;}
+</style>
+
+</head>
+<body>
+
+    <div id="profile-content">
+        <h1>Profile</h1>
+        
+        <div id="profile-view">
+            <p><strong>Username: </strong><span id="display-username"></span></p>
+            <p><strong>First Name: </strong><span id="display-firstname"></span></p>
+            <p><strong>Last Name: </strong><span id="display-lastname"></span></p>
+            <button id="edit-btn">Edit Profile</button>
+            <button id="logout-btn">Log Out</button>
+        </div>
+
+        <div id="edit-form">
+            <h2>Edit Profile</h2>
+            
+            <div>
+                <label for="edit-firstname">First Name</label>
+                <input type="text" id="edit-firstname" name="firstname">
+
+                <label for="lastname">Last Name</label>
+                <input type="text" id="edit-lastname" name="lastname">
+
+                <label for="username">Username</label>
+                <input type="text" id="edit-username" name="username">
+            </div>
+
+            <button id="save-btn">Save Changes</button>
+            <button id="cancel-btn">Cancel</button>
+
+        </div>
+    </div>
+    <script>
+    let currentUser: {
+            id: string
+            firstname: string
+            lastname: string
+            username: string
+        } | null = null
+
+    async function checkAccess() {
+        const res = await fetch ('http://localhost:3000/auth-check', {
+            credentials: "include"
+        })
+
+        if(res.ok) {
+            const user = await res.json()
+            currentUser = user
+            renderProfile(user)
+            const content = document.getElementById("profile-content")
+            if(content) content.style.display = "block"
+        }else {
+            window.location.href = "/login"
+        }
+    }
+
+    function renderProfile(user: {
+        id: string
+        firstname: string
+        lastname: string
+        username: string
+    }) {
+        const usernameEl = document.getElementById("display-username")
+        const firstnameEl = document.getElementById("display-firstname")
+        const lastnameEl = document.getElementById("display-lastname")
+
+        if(usernameEl) usernameEl.textContent = user.username
+        if(firstnameEl) firstnameEl.textContent = user.firstname
+        if(lastnameEl) lastnameEl.textContent = user.lastname
+    }
+
+    const logoutBtn = document.getElementById("logout-btn") as HTMLButtonElement
+    logoutBtn?.addEventListener("click", async function() {
+        const res = await fetch("http://localhost:3000/logout", {
+            method: "GET", 
+            credentials: "include"
+        })
+
+        if(res.ok) {
+            window.location.href = "/login"
+        } else {
+            alert("Could not log out.")
+        }
+    })
+
+    const editBtn = document.getElementById("edit-btn") as HTMLButtonElement
+    editBtn?.addEventListener("click", function() {
+        if(!currentUser) return
+
+        const firstnameInput = document.getElementById("edit-firstname") as HTMLInputElement
+        const lastnameInput = document.getElementById("edit-lastname") as HTMLInputElement
+        const usernameInput = document.getElementById("edit-username") as HTMLInputElement
+
+        firstnameInput.value = currentUser.firstname
+        lastnameInput.value = currentUser.lastname
+        usernameInput.value = currentUser.username
+
+        document.getElementById("profile-view")!.style.display = "none"
+        document.getElementById("edit-form")!.style.display = "block"
+    })
+
+    const cancelBtn = document.getElementById("cancel-btn") as HTMLButtonElement
+    cancelBtn?.addEventListener("click", function() {
+        document.getElementById("profile-view")!.style.display = "block"
+        document.getElementById("edit-form")!.style.display = "none"
+    })
+
+    const saveBtn = document.getElementById("save-btn") as HTMLButtonElement 
+    saveBtn?.addEventListener("click", async function () {
+        if(!currentUser) return
+
+        const firstname = (document.getElementById("edit-firstname") as HTMLInputElement).value.trim()
+        const lastname = (document.getElementById("edit-lastname") as HTMLInputElement).value.trim()
+        const username = (document.getElementById("edit-username") as HTMLInputElement).value.trim()
+
+        if(!firstname || !lastname || !username) {
+            alert("All fields are required.")
+            return
+        }
+
+        const res = await fetch(`http://localhost:3000/users/${currentUser.id}`, {
+            method: "PUT",
+            headers: {"Content-type": "application/json"}, 
+            credentials: "include",
+            body: JSON.stringify({firstname, lastname, username})
+        })
+
+        const data = await res.json()
+
+        if(!res.ok) {
+            alert(data.error)
+            return
+        }
+
+        currentUser = data
+        renderProfile(data)
+        document.getElementById("profile-view")!.style.display = "block"
+        document.getElementById("edit-form")!.style.display = "none"
+    })
+    
+     checkAccess()
+
+    </script>
+    
+</body>
+</html>

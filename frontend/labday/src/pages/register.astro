@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Register</h1>
+
+    <form id="form-signup">
+        <div>
+            <label for="firstname">First Name</label>
+            <input type="text" name="firstname" placeholder="Enter first name..." required>
+
+            <label for="lastname">Last Name</label>
+            <input type="text" name="lastname" placeholder="Enter last name..." required>
+        </div>
+        
+        <div>
+            <label for="username">Username</label>
+            <input type="text" name="username" placeholder="Enter username..." required>
+
+            <label for="password">Password</label>
+            <input type="password" name="password" placeholder="Enter password..." required minlength="8">
+        </div>
+        <button type="submit">Create Account</button>
+    </form>
+
+    <script>
+        const form = document.getElementById('form-signup') as HTMLFormElement
+        form?.addEventListener('submit', async function(e) {
+            e.preventDefault()
+
+            const formData = new FormData(form)
+            const firstname = formData.get("firstname")
+            const lastname = formData.get("lastname")
+            const username = formData.get("username")
+            const password = formData.get("password")
+
+            const res = await fetch('http://localhost:3000/users', {
+                method: 'POST', headers: {
+                    'Content-type': 'application/json'
+                },
+                credentials: 'include', 
+                body: JSON.stringify({
+                    firstname, lastname, username, password
+                })
+            })
+
+            const data = await res.json()
+
+            if(!res.ok) {
+                alert(data.error)
+                return
+            }
+            window.location.href = "/profile"
+        })
+    </script>
+</body>
+</html>
